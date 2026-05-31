@@ -1,9 +1,9 @@
 /**
- * GhostChat — Add Contact Modal
+ * GhostChat — Add Contact Modal (Pro)
  */
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, UserPlus, Copy } from 'lucide-react';
+import { X, UserPlus, Copy, Plus } from 'lucide-react';
 import { useAppStore } from '../stores';
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
@@ -44,7 +44,6 @@ export function AddContactModal() {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       } catch {
-        // Fallback for Tauri
         try {
           const { writeText } = await import('@tauri-apps/plugin-clipboard-manager');
           await writeText(ourPeerId);
@@ -59,122 +58,109 @@ export function AddContactModal() {
 
   return (
     <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 bg-void/80 backdrop-blur-sm z-50 flex items-center justify-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={closeModal}
-      >
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
         <motion.div
-          className="bg-surface border border-border-subtle rounded-2xl w-[440px] max-w-[90vw] shadow-2xl"
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="absolute inset-0 bg-void/60 backdrop-blur-md"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={closeModal}
+        />
+        
+        <motion.div
+          className="relative bg-surface border border-white/10 rounded-[28px] w-full max-w-[420px] shadow-2xl overflow-hidden"
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtle">
-            <h3 className="text-ghost-white font-medium flex items-center gap-2">
-              <UserPlus size={18} className="text-accent-glow" />
-              Add Contact
-            </h3>
-            <button onClick={closeModal} className="p-1.5 rounded-lg text-ghost-dim hover:text-ghost-white hover:bg-elevated transition-colors">
-              <X size={18} />
-            </button>
+          <div className="px-6 pt-8 pb-4 text-center">
+            <div className="w-12 h-12 bg-accent-glow/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Plus size={24} className="text-accent-glow" />
+            </div>
+            <h3 className="text-white text-[19px] font-bold tracking-tight">Add Contact</h3>
+            <p className="text-ghost-dim text-[13px] mt-1">Connect with another peer directly.</p>
           </div>
 
           {/* Body */}
-          <div className="px-6 py-5 space-y-4">
-            {/* Your PeerID */}
-            <div className="p-3 rounded-xl bg-elevated border border-border-subtle">
-              <p className="text-[10px] text-ghost-dim font-code uppercase tracking-wider mb-1.5">Your PeerID — share this</p>
-              <div className="flex items-center gap-2">
-                <code className="flex-1 text-xs text-accent-glow font-code break-all leading-relaxed">
-                  {ourPeerId || 'Not initialized'}
-                </code>
+          <div className="px-6 py-2 space-y-5">
+            {/* Identity Sharing */}
+            <div className="p-3.5 rounded-[18px] bg-white/5 border border-white/5 group relative">
+              <div className="flex justify-between items-center mb-1.5">
+                <span className="text-[10px] text-ghost-dim font-bold uppercase tracking-widest">Your Identity</span>
                 <button
                   onClick={copyOurId}
-                  className="p-2 rounded-lg text-ghost-dim hover:text-accent-glow hover:bg-accent-glow/10 transition-colors flex-shrink-0"
-                  title="Copy PeerID"
+                  className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${copied ? 'text-accent-safe' : 'text-accent-glow hover:text-accent-glow/80'}`}
                 >
-                  {copied ? <Check size={16} /> : <Copy size={16} />}
+                  {copied ? 'Copied' : 'Copy ID'}
                 </button>
               </div>
+              <code className="block text-[11px] text-white/90 font-mono break-all leading-relaxed bg-black/30 p-2 rounded-lg">
+                {ourPeerId || 'Initializing...'}
+              </code>
             </div>
 
-            {/* Our Listen Addresses */}
-            {listenAddrs.length > 0 && (
-              <div className="p-3 rounded-xl bg-elevated border border-border-subtle">
-                <p className="text-[10px] text-ghost-dim font-code uppercase tracking-wider mb-1.5">Your Address — share with remote peers</p>
-                {listenAddrs.map((addr, i) => (
-                  <code key={i} className="block text-[10px] text-accent-glow/70 font-code break-all leading-relaxed">
-                    {addr}/p2p/{ourPeerId}
-                  </code>
-                ))}
-              </div>
-            )}
-
             {/* Peer ID input */}
-            <div>
-              <label className="text-xs text-ghost-dim font-code block mb-1.5">Contact's PeerID</label>
+            <div className="space-y-1.5">
+              <label className="text-[11px] text-ghost-dim font-bold uppercase tracking-widest ml-1">Contact PeerID</label>
               <input
                 type="text"
                 value={peerIdInput}
                 onChange={(e) => setPeerIdInput(e.target.value)}
-                placeholder="Paste their PeerID here..."
-                className="w-full bg-elevated text-ghost-white text-sm px-4 py-2.5 rounded-xl border border-border-subtle focus:border-accent-glow/30 outline-none transition-all placeholder:text-ghost-dim/40 font-code"
+                placeholder="Paste PeerID"
+                className="w-full bg-elevated/50 text-white text-[14px] px-4 py-3 rounded-xl border border-white/5 focus:border-accent-glow/50 focus:bg-elevated outline-none transition-all placeholder:text-white/20 font-mono"
               />
             </div>
 
-            {/* Multiaddr input */}
-            <div>
-              <label className="text-xs text-ghost-dim font-code block mb-1.5">Multiaddr (for internet peers, optional for LAN)</label>
+             {/* Multiaddr input */}
+             <div className="space-y-1.5">
+              <label className="text-[11px] text-ghost-dim font-bold uppercase tracking-widest ml-1">Optional Multiaddr</label>
               <input
                 type="text"
                 value={multiaddrInput}
                 onChange={(e) => setMultiaddrInput(e.target.value)}
-                placeholder="/ip4/1.2.3.4/tcp/4001/p2p/12D3KooW..."
-                className="w-full bg-elevated text-ghost-white text-sm px-4 py-2.5 rounded-xl border border-border-subtle focus:border-accent-glow/30 outline-none transition-all placeholder:text-ghost-dim/40 font-code"
+                placeholder="/ip4/x.x.x.x/tcp/4001"
+                className="w-full bg-elevated/50 text-white text-[14px] px-4 py-3 rounded-xl border border-white/5 focus:border-accent-glow/50 focus:bg-elevated outline-none transition-all placeholder:text-white/20 font-mono"
               />
             </div>
 
             {/* Display name */}
-            <div>
-              <label className="text-xs text-ghost-dim font-code block mb-1.5">Display Name (optional)</label>
+            <div className="space-y-1.5">
+              <label className="text-[11px] text-ghost-dim font-bold uppercase tracking-widest ml-1">Display Name</label>
               <input
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="How should they appear?"
-                className="w-full bg-elevated text-ghost-white text-sm px-4 py-2.5 rounded-xl border border-border-subtle focus:border-accent-glow/30 outline-none transition-all placeholder:text-ghost-dim/40"
+                placeholder="e.g. Satoshi"
+                className="w-full bg-elevated/50 text-white text-[14px] px-4 py-3 rounded-xl border border-white/5 focus:border-accent-glow/50 focus:bg-elevated outline-none transition-all placeholder:text-white/20"
               />
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="px-6 py-4 border-t border-border-subtle flex justify-end gap-3">
+          {/* Actions */}
+          <div className="p-6 flex flex-col gap-2">
+            <button
+              onClick={handleAdd}
+              disabled={!peerIdInput.trim()}
+              className={`w-full py-3.5 rounded-xl font-bold text-[15px] transition-all ${
+                peerIdInput.trim()
+                  ? 'bg-accent-glow text-white shadow-apple active:scale-[0.98]'
+                  : 'bg-white/5 text-white/20 cursor-not-allowed'
+              }`}
+            >
+              Connect
+            </button>
             <button
               onClick={closeModal}
-              className="px-4 py-2 text-sm text-ghost-dim hover:text-ghost-white transition-colors rounded-xl"
+              className="w-full py-3 text-[14px] font-semibold text-ghost-dim hover:text-white transition-colors"
             >
               Cancel
             </button>
-            <motion.button
-              onClick={handleAdd}
-              disabled={!peerIdInput.trim()}
-              className={`px-5 py-2 text-sm rounded-xl font-medium transition-all duration-200 ${
-                peerIdInput.trim()
-                  ? 'bg-accent-glow text-void hover:bg-accent-glow/90'
-                  : 'bg-elevated text-ghost-dim/30 cursor-not-allowed'
-              }`}
-              whileTap={peerIdInput.trim() ? { scale: 0.97 } : undefined}
-            >
-              Add Contact
-            </motion.button>
           </div>
         </motion.div>
-      </motion.div>
+      </div>
     </AnimatePresence>
   );
 }

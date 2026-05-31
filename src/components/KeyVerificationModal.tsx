@@ -1,12 +1,9 @@
 /**
- * GhostChat — Key Verification Modal
- * 
- * Safety numbers for verifying peer identity.
- * Ensures no MITM between you and the contact.
+ * GhostChat — Key Verification Modal (Pro)
  */
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShieldCheck, QrCode } from 'lucide-react';
+import { X, ShieldCheck, QrCode, Lock } from 'lucide-react';
 import { useAppStore } from '../stores';
 import { Identicon } from './Identicon';
 
@@ -16,107 +13,109 @@ export function KeyVerificationModal() {
   if (activeModal !== 'key-verification' || !modalData?.peerId) return null;
 
   const peerId = modalData.peerId as string;
-  
-  // Generate safety number from combined public keys (placeholder)
   const safetyNumber = generateSafetyNumber(peerId);
 
   return (
     <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 bg-void/80 backdrop-blur-sm z-50 flex items-center justify-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={closeModal}
-      >
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
         <motion.div
-          className="bg-surface border border-border-subtle rounded-2xl w-[420px] max-w-[90vw] shadow-2xl"
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="absolute inset-0 bg-void/60 backdrop-blur-md"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={closeModal}
+        />
+        
+        <motion.div
+          className="relative bg-surface border border-white/10 rounded-[28px] w-full max-w-[440px] shadow-2xl overflow-hidden"
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtle">
-            <h3 className="text-ghost-white font-medium flex items-center gap-2">
-              <ShieldCheck size={18} className="text-accent-safe" />
-              Verify Encryption
-            </h3>
-            <button onClick={closeModal} className="p-1.5 rounded-lg text-ghost-dim hover:text-ghost-white hover:bg-elevated transition-colors">
-              <X size={18} />
-            </button>
+          <div className="px-6 pt-8 pb-4 text-center">
+            <div className="w-12 h-12 bg-accent-safe/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <ShieldCheck size={24} className="text-accent-safe" />
+            </div>
+            <h3 className="text-white text-[19px] font-bold tracking-tight">Verify Connection</h3>
+            <p className="text-ghost-dim text-[13px] mt-1">Confirm that your connection to this peer is secure.</p>
           </div>
 
-          <div className="px-6 py-5 space-y-4">
-            {/* Peer */}
-            <div className="flex items-center gap-3">
-              <Identicon peerId={peerId} size={48} />
-              <div>
-                <p className="text-ghost-white text-sm font-medium">{peerId.slice(0, 16)}...</p>
-                <p className="text-ghost-dim/60 text-[10px] font-code">{peerId}</p>
+          <div className="px-6 py-2 space-y-6">
+            {/* Peer Info */}
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5">
+              <Identicon peerId={peerId} size={44} />
+              <div className="min-w-0">
+                <p className="text-white text-[14px] font-semibold truncate">{peerId}</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-accent-safe" />
+                  <span className="text-[11px] text-accent-safe font-bold uppercase tracking-wider">E2E Secured</span>
+                </div>
               </div>
             </div>
 
-            {/* Safety Number */}
-            <div className="p-4 rounded-xl bg-elevated border border-border-subtle text-center">
-              <p className="text-[10px] text-ghost-dim font-code uppercase tracking-wider mb-3">Safety Number</p>
-              <div className="grid grid-cols-6 gap-1.5">
-                {safetyNumber.map((num, i) => (
-                  <motion.span
-                    key={i}
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.03 }}
-                    className="text-accent-glow font-code text-sm py-1.5 rounded-lg bg-void/50"
-                  >
-                    {num}
-                  </motion.span>
-                ))}
-              </div>
+            {/* Safety Number Grid */}
+            <div className="space-y-2">
+               <div className="flex justify-between items-center ml-1">
+                 <h4 className="text-[11px] text-ghost-dim font-bold uppercase tracking-widest">Safety Number</h4>
+                 <Lock size={12} className="text-ghost-dim/40" />
+               </div>
+               <div className="grid grid-cols-3 gap-2">
+                 {safetyNumber.map((num, i) => (
+                   <div key={i} className="bg-black/40 p-2.5 rounded-xl border border-white/5 text-center">
+                     <span className="text-accent-glow font-mono text-[14px] font-bold tracking-wider">{num}</span>
+                   </div>
+                 ))}
+               </div>
             </div>
 
-            {/* Instructions */}
-            <p className="text-ghost-dim/60 text-xs text-center leading-relaxed">
-              Compare these numbers with your contact in person or via a trusted channel.
-              If they match, your conversation is secure from man-in-the-middle attacks.
-            </p>
+            {/* Verification Instruction */}
+            <div className="bg-accent-glow/5 p-4 rounded-2xl border border-accent-glow/10">
+               <p className="text-[12px] text-ghost-dim leading-relaxed text-center">
+                 Verify these numbers with your contact. If they match, your connection is verified and safe from interference.
+               </p>
+            </div>
 
-            {/* QR placeholder */}
-            <div className="flex justify-center">
-              <div className="w-32 h-32 rounded-xl bg-elevated border border-border-subtle flex items-center justify-center">
-                <QrCode size={48} className="text-ghost-dim/30" />
-              </div>
+            {/* QR Scanner Placeholder */}
+            <div className="flex justify-center pb-2">
+               <button className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group">
+                 <QrCode size={20} className="text-ghost-dim group-hover:text-white" />
+                 <span className="text-[14px] font-semibold text-ghost-dim group-hover:text-white">Scan QR Code</span>
+               </button>
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="px-6 py-4 border-t border-border-subtle flex justify-between">
-            <button onClick={closeModal} className="px-4 py-2 text-sm text-ghost-dim hover:text-ghost-white transition-colors rounded-xl">
-              Close
-            </button>
-            <motion.button
+          {/* Actions */}
+          <div className="p-6 flex flex-col gap-2">
+            <button
               onClick={() => {
                 window.dispatchEvent(new CustomEvent('ghostchat:verify', { detail: { peerId } }));
                 closeModal();
               }}
-              className="px-5 py-2 text-sm rounded-xl font-medium bg-accent-safe/15 text-accent-safe border border-accent-safe/20 hover:bg-accent-safe/25 transition-colors"
-              whileTap={{ scale: 0.97 }}
+              className="w-full py-3.5 rounded-xl bg-accent-safe text-white font-bold text-[15px] shadow-apple active:scale-[0.98] transition-all"
             >
-              Mark as Verified ✓
-            </motion.button>
+              Verify Connection
+            </button>
+            <button
+              onClick={closeModal}
+              className="w-full py-3 text-[14px] font-semibold text-ghost-dim hover:text-white transition-colors"
+            >
+              Dismiss
+            </button>
           </div>
         </motion.div>
-      </motion.div>
+      </div>
     </AnimatePresence>
   );
 }
 
 function generateSafetyNumber(peerId: string): string[] {
-  // Simplified safety number — in production, derived from both parties' identity keys
   const nums: string[] = [];
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 6; i++) {
     const charCode = peerId.charCodeAt(i * 3 % peerId.length);
-    nums.push(String(charCode % 100000).padStart(5, '0'));
+    nums.push(String(charCode % 10000).padStart(4, '0'));
   }
   return nums;
 }

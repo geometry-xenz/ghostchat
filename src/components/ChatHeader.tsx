@@ -1,11 +1,9 @@
 /**
- * GhostChat — Chat Header
- * 
- * Top bar in chat view: contact info, encryption status, call/options.
+ * GhostChat — Chat Header (Pro)
  */
 
 import { motion } from 'framer-motion';
-import { Shield, ShieldCheck, Phone, MoreVertical } from 'lucide-react';
+import { Shield, ShieldCheck, Phone, MoreVertical, Video } from 'lucide-react';
 import { Identicon } from './Identicon';
 import { useAppStore } from '../stores';
 
@@ -21,64 +19,86 @@ export function ChatHeader({ peerId, displayName, online, isVerified, latencyMs 
   const openModal = useAppStore((s) => s.openModal);
   
   return (
-    <motion.div
-      className="flex items-center justify-between px-5 py-3 border-b border-border-subtle bg-surface/80 backdrop-blur-sm"
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="flex items-center gap-3">
-        <div className="relative">
-          <Identicon peerId={peerId} size={38} />
+    <header className="flex items-center justify-between px-6 py-4 border-b border-border-subtle bg-void/50 backdrop-blur-xl sticky top-0 z-10">
+      <div className="flex items-center gap-3.5">
+        <div className="relative group cursor-pointer">
+          <Identicon peerId={peerId} size={36} />
           {online && (
-            <motion.div
-              className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-accent-safe rounded-full border-2 border-surface"
-              animate={{ scale: [1, 1.15, 1] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-            />
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-accent-safe rounded-full border-[2.5px] border-void" />
           )}
         </div>
-        <div>
-          <h2 className="text-ghost-white text-sm font-medium">
-            {displayName || peerId.slice(0, 16) + '...'}
-          </h2>
-          <div className="flex items-center gap-2">
-            <span className={`text-[10px] font-code ${online ? 'text-accent-safe' : 'text-ghost-dim/50'}`}>
-              {online ? 'online' : 'offline'}
+        <div className="flex flex-col">
+          <div className="flex items-center gap-1.5">
+            <h2 className="text-ghost-white text-[15px] font-semibold tracking-tight leading-tight">
+              {displayName || peerId.slice(0, 16) + '...'}
+            </h2>
+            {isVerified && (
+              <ShieldCheck size={14} className="text-accent-safe mt-0.5" />
+            )}
+          </div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className={`text-[11px] font-medium tracking-tight ${online ? 'text-accent-safe' : 'text-ghost-dim'}`}>
+              {online ? 'Online' : 'Offline'}
             </span>
             {latencyMs !== undefined && online && (
-              <span className="text-[10px] font-code text-ghost-dim/40">{latencyMs}ms</span>
+              <span className="text-[10px] font-mono text-ghost-dim/60 tabular-nums">{latencyMs}ms</span>
             )}
           </div>
         </div>
       </div>
       
       <div className="flex items-center gap-1">
-        {/* Encryption status */}
-        <button
+        <HeaderButton 
+          icon={<Video size={19} />} 
+          title="Video call" 
+          disabled 
+        />
+        <HeaderButton 
+          icon={<Phone size={18} />} 
+          title="Voice call" 
+          disabled 
+        />
+        <div className="w-[1px] h-4 bg-border-subtle mx-2" />
+        <HeaderButton
           onClick={() => openModal('key-verification', { peerId })}
-          className={`p-2 rounded-lg transition-colors duration-200 ${
-            isVerified
-              ? 'text-accent-safe hover:bg-accent-safe/10'
-              : 'text-ghost-dim hover:bg-elevated'
-          }`}
-          title={isVerified ? 'Keys verified ✓' : 'Verify encryption keys'}
-        >
-          {isVerified ? <ShieldCheck size={18} /> : <Shield size={18} />}
-        </button>
-        
-        <button
-          className="p-2 rounded-lg text-ghost-dim hover:text-ghost-white hover:bg-elevated transition-colors duration-200"
-          title="Voice call (coming soon)"
-          disabled
-        >
-          <Phone size={18} />
-        </button>
-        
-        <button className="p-2 rounded-lg text-ghost-dim hover:text-ghost-white hover:bg-elevated transition-colors duration-200">
-          <MoreVertical size={18} />
-        </button>
+          icon={isVerified ? <ShieldCheck size={19} /> : <Shield size={19} />}
+          title={isVerified ? 'Connection verified' : 'Verify connection'}
+          className={isVerified ? 'text-accent-safe' : 'text-ghost-dim'}
+        />
+        <HeaderButton 
+          icon={<MoreVertical size={19} />} 
+          title="Details"
+        />
       </div>
-    </motion.div>
+    </header>
+  );
+}
+
+function HeaderButton({ 
+  icon, 
+  onClick, 
+  title, 
+  disabled = false,
+  className = ""
+}: { 
+  icon: React.ReactNode; 
+  onClick?: () => void; 
+  title: string;
+  disabled?: boolean;
+  className?: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`p-2 rounded-lg transition-all duration-150 active:scale-95 ${
+        disabled 
+          ? 'opacity-20 cursor-not-allowed' 
+          : 'text-accent-glow hover:bg-white/5 active:bg-white/10'
+      } ${className}`}
+      title={title}
+    >
+      {icon}
+    </button>
   );
 }

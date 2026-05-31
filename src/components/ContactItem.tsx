@@ -1,12 +1,11 @@
 /**
- * GhostChat — Contact List Item
- * 
- * Individual contact in the sidebar list.
+ * GhostChat — Contact List Item (Pro)
  */
 
 import { motion } from 'framer-motion';
 import { Identicon } from './Identicon';
 import { useChatStore } from '../stores';
+import { ShieldCheck } from 'lucide-react';
 
 interface ContactItemProps {
   peerId: string;
@@ -31,82 +30,70 @@ export function ContactItem({
   const isActive = activePeerId === peerId;
 
   return (
-    <motion.button
+    <button
       onClick={() => setActivePeer(peerId)}
-      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200 rounded-xl mx-2 ${
+      className={`w-full flex items-center gap-3 px-3 py-3 text-left transition-all duration-150 rounded-xl relative group ${
         isActive
-          ? 'bg-accent-glow/10 border border-accent-glow/20'
-          : 'hover:bg-elevated border border-transparent'
+          ? 'bg-accent-glow'
+          : 'hover:bg-white/5 active:bg-white/10'
       }`}
-      whileHover={{ x: 2 }}
-      whileTap={{ scale: 0.98 }}
     >
       {/* Avatar */}
       <div className="relative flex-shrink-0">
-        <Identicon peerId={peerId} size={44} />
+        <Identicon peerId={peerId} size={48} />
         {online && (
-          <motion.div
-            className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-accent-safe rounded-full border-2 border-surface"
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ repeat: Infinity, duration: 2 }}
-          />
+          <div className={`absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-accent-safe rounded-full border-[2.5px] ${isActive ? 'border-accent-glow' : 'border-surface'}`} />
         )}
       </div>
 
       {/* Info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <span className="text-ghost-white text-sm font-medium truncate">
-            {displayName || peerId.slice(0, 12) + '...'}
-          </span>
-          {isVerified && (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-accent-safe flex-shrink-0">
-              <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-            </svg>
+      <div className="flex-1 min-w-0 pr-2">
+        <div className="flex items-center justify-between mb-0.5">
+          <div className="flex items-center gap-1 min-w-0">
+            <span className={`text-[14px] font-semibold truncate ${isActive ? 'text-white' : 'text-white'}`}>
+              {displayName || peerId.slice(0, 12)}
+            </span>
+            {isVerified && (
+              <ShieldCheck size={12} className={isActive ? 'text-white/80' : 'text-accent-safe'} />
+            )}
+          </div>
+          {lastMessageTime && (
+            <span className={`text-[11px] font-medium tabular-nums ${isActive ? 'text-white/70' : 'text-ghost-dim'}`}>
+              {formatTime(lastMessageTime)}
+            </span>
           )}
         </div>
-        {lastMessage && (
-          <p className="text-ghost-dim text-xs truncate mt-0.5">
-            {lastMessage}
+        
+        <div className="flex items-center justify-between gap-2">
+          <p className={`text-[13px] leading-tight truncate ${
+            isActive ? 'text-white/80' : 'text-ghost-dim'
+          } ${unreadCount > 0 ? 'font-semibold text-white' : ''}`}>
+            {lastMessage || 'No messages yet'}
           </p>
-        )}
+          
+          {unreadCount > 0 && !isActive && (
+            <div className="min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-accent-glow text-white text-[10px] font-bold px-1 animate-scale-in shadow-apple">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </div>
+          )}
+        </div>
       </div>
-
-      {/* Right */}
-      <div className="flex flex-col items-end gap-1 flex-shrink-0">
-        {lastMessageTime && (
-          <span className="text-ghost-dim/60 text-[10px]">
-            {formatTime(lastMessageTime)}
-          </span>
-        )}
-        {unreadCount > 0 && (
-          <motion.span
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="min-w-[20px] h-5 flex items-center justify-center rounded-full bg-accent-glow text-void text-[10px] font-bold px-1.5"
-          >
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </motion.span>
-        )}
-      </div>
-    </motion.button>
+    </button>
   );
 }
 
 function formatTime(timestamp: number): string {
-  const now = Date.now();
-  const diff = now - timestamp;
-  const mins = Math.floor(diff / 60000);
+  const d = new Date(timestamp);
+  const now = new Date();
   
-  if (mins < 1) return 'now';
-  if (mins < 60) return `${mins}m`;
+  if (d.toDateString() === now.toDateString()) {
+    return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+  }
   
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h`;
+  const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays < 7) {
+    return d.toLocaleDateString([], { weekday: 'short' });
+  }
   
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d`;
-  
-  return new Date(timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
